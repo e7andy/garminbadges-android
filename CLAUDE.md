@@ -27,12 +27,49 @@ Android client for [Garmin Badge Database](https://garminbadges.com/) that repli
 
 ## Tech stack
 
-- **minSdk 26**, **targetSdk 36**, Java 11, AGP 8.12.3
+- **minSdk 26**, **targetSdk 36**, Java 11, AGP 9.2.1
 - **WebView** for Garmin Connect authentication (captures session cookies)
-- **OkHttp** for all Garmin and garminbadges.com API calls (not yet added — needs to be added to `libs.versions.toml` and `app/build.gradle.kts`)
+- **OkHttp 4.12.0** for all Garmin and garminbadges.com API calls
+- **org.json** (Android built-in) for JSON parsing — no extra dependency
+- Material3 (`Theme.Material3.DayNight.NoActionBar`)
 - Single-module app under `:app`
 
-## Garmin API details (from the Chrome extension)
+## Architecture
+
+The sync flow is a Java port of `sync.js` from the sibling `garminbadges-updater` Chrome extension repo. Keep the two in sync when Garmin's API behaviour changes.
+
+### Key classes
+
+| Class | Responsibility |
+|---|---|
+| `AuthActivity` | WebView that loads `connect.garmin.com`; injects JS to extract the CSRF token from `<meta name="_token">`; returns token via `Intent` extra on "Done" |
+| `GarminApiClient` | OkHttp wrapper for all `https://connect.garmin.com/gc-api` calls; attaches the four required headers on every request |
+| `GarminBadgesApiClient` | OkHttp wrapper for `https://api.garminbadges.com/api`; handles `/badges` (GET) and `/sync` (POST) |
+| `SyncManager` | Orchestrates the full sync; runs on a caller-supplied background thread; uses an internal 8-thread pool for parallel badge-detail and repeatable-earn fetches; reports progress via `Callback` |
+| `MainActivity` | UI: API key field (persisted in `SharedPreferences`), Sign In button, Sync Now button, scrolling progress log; runs sync on a single-thread `ExecutorService`, posts UI updates via `Handler(Looper.getMainLooper())` |
+
+### Auth flow
+
+1. `MainActivity` launches `AuthActivity` via `ActivityResultLauncher`.
+2. `AuthActivity` enables JavaScript and third-party cookies on the WebView (required for Garmin's SSO redirect through `sso.garmin.com`).
+3. On each `onPageFinished` for a `connect.garmin.com` URL, JS is injected to call `window.GarminBadges.onToken(token)` — a `@JavascriptInterface` that stores the token.
+4. User taps "Done"; `AuthActivity` returns the CSRF token in an `Intent` extra.
+5. `MainActivity` reads cookies for `https://connect.garmin.com` from `CookieManager` and enables the Sync button.
+
+### Sync logic
+
+`SyncManager.sync()` mirrors `sync.js` step by step:
+
+1. `GET /userprofile-service/socialProfile` → `garminUsername`
+2. `GET /badge-service/badge/earned` → earned records
+3. `GET /badgechallenge-service/badgeChallenge/non-completed` + `virtualChallenge/inProgress` + `badge/available` → challenges/available
+4. `GET https://api.garminbadges.com/api/badges` → site catalogue (used for name deduplication and identifying repeatable badges)
+5. Parallel fetch of `badge/detail/v3/{id}` for challenges and earned repeatables
+6. Parallel fetch of `badge/{username}/earned/detail/repeatable/v2/{id}` for all earned repeatables — provides accurate historical earn dates
+7. Deduplication of numbered badge series (e.g. "Badge Name 1", "Badge Name 2" → keep lowest-numbered active one)
+8. `POST https://api.garminbadges.com/api/sync` with the assembled records array
+
+## Garmin API details
 
 All Garmin calls go to `https://connect.garmin.com/gc-api<path>` with these headers:
 
@@ -41,6 +78,7 @@ Accept: application/json
 di-backend: connectapi.garmin.com
 nk: NT
 connect-csrf-token: <token from <meta name="_token"> on the page>
+Cookie: <session cookies from CookieManager>
 ```
 
 Key endpoints:
@@ -66,7 +104,3 @@ Record schema for each badge entry:
   "create_date": "2024-01-01"
 }
 ```
-
-## Android auth approach
-
-The WebView must load `https://connect.garmin.com` and let the user log in normally. Once authenticated, extract the CSRF token (present in a `<meta name="_token">` tag) and the session cookies via `CookieManager`. These are then forwarded with every OkHttp request to the Garmin API.
