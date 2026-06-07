@@ -66,3 +66,35 @@ jobs:
           name: release-aab
           path: app/build/outputs/bundle/release/app-release.aab
           retention-days: 14
+
+      - name: Build summary
+        if: always()
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | sed 's/[^0-9]//g')
+          DEBUG_SIZE=$(du -sh app/build/outputs/apk/debug/app-debug.apk 2>/dev/null | cut -f1 || echo "n/a")
+
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | $VERSION_NAME ($VERSION_CODE) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | Size | Retained |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 debug-apk | $DEBUG_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
+            AAB_SIZE=$(du -sh app/build/outputs/bundle/release/app-release.aab | cut -f1)
+            echo "| 🚀 release-aab | $AAB_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
+          elif [ -z "$KEYSTORE_BASE64" ]; then
+            echo "| 🔒 release-aab | — | Skipped (no signing secrets configured) |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ❌ release-aab | — | Build failed |" >> $GITHUB_STEP_SUMMARY
+          fi
