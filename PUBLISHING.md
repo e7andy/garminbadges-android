@@ -101,7 +101,66 @@ To also build a standalone signed APK (for sideloading or testing):
 
 ---
 
-## 4. Create the app in Play Console
+## 4. Set up GitHub Actions CI/CD
+
+The repository includes a workflow at `.github/workflows/build.yml` that automatically:
+
+- Builds a **debug APK** on every push and pull request (no secrets required).
+- Builds and signs a **release AAB** on every push to `main`, provided the signing secrets are configured.
+
+### 4a. Encode the keystore
+
+GitHub Secrets cannot store binary files, so the keystore is stored as a base64 string.
+
+**macOS / Linux:**
+```bash
+base64 -w 0 release.keystore
+```
+
+**Windows (PowerShell):**
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("release.keystore"))
+```
+
+Copy the entire output — it will be a long single line.
+
+### 4b. Add secrets in GitHub
+
+1. Open your repository on GitHub.
+2. Go to **Settings → Secrets and variables → Actions**.
+3. Click **New repository secret** for each of the following:
+
+| Secret name | Value |
+|---|---|
+| `KEYSTORE_BASE64` | The base64 string from step 4a |
+| `KEYSTORE_PASSWORD` | The keystore password you set when running `keytool` |
+| `KEY_ALIAS` | The key alias (e.g. `garminbadges`) |
+| `KEY_PASSWORD` | The key password (same as keystore password if you used the same one) |
+
+### 4c. Trigger the workflow
+
+Push any commit to `main`. The workflow will:
+
+1. Build the debug APK unconditionally.
+2. Decode the keystore from `KEYSTORE_BASE64` into a temp file.
+3. Pass the keystore path and credentials as environment variables to `bundleRelease`.
+4. Upload both artifacts.
+
+### 4d. Download the artifacts
+
+After the workflow completes:
+
+1. Go to **Actions** → click the latest workflow run.
+2. Scroll to the **Artifacts** section at the bottom.
+3. Download `debug-apk` or `release-aab`.
+
+Artifacts are retained for 14 days.
+
+> **Note:** The signing config in `app/build.gradle.kts` reads credentials from environment variables (`KEYSTORE_FILE`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`). Local release builds still work using those same variables in your shell, or you can set them directly in the Gradle run configuration.
+
+---
+
+## 5. Create the app in Play Console
 
 1. Go to [Google Play Console](https://play.google.com/console) and click **Create app**.
 2. Fill in:
@@ -113,7 +172,7 @@ To also build a standalone signed APK (for sideloading or testing):
 
 ---
 
-## 5. Complete the store listing
+## 6. Complete the store listing
 
 Navigate to **Store presence → Main store listing** and fill in:
 
@@ -140,7 +199,7 @@ Requires a free garminbadges.com account and API key.
 
 ---
 
-## 6. Fill in required sections
+## 7. Fill in required sections
 
 Play Console will show a checklist of required items before you can publish. Work through each section:
 
@@ -158,7 +217,7 @@ Play Console will show a checklist of required items before you can publish. Wor
 
 ---
 
-## 7. Set up a release track
+## 8. Set up a release track
 
 1. Go to **Release → Testing → Internal testing** (recommended for the first upload).
 2. Click **Create new release**.
@@ -170,7 +229,7 @@ Once internal testing is verified, promote the release to **Closed testing**, th
 
 ---
 
-## 8. Production release
+## 9. Production release
 
 Before promoting to Production, Play Console will run automated checks and may ask for additional information. Common requirements:
 
