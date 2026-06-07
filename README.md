@@ -78,6 +78,10 @@ Authentication uses Garmin's SSO widget flow (`sso.garmin.com`) to obtain an OAu
 
 The sync logic is a Java port of [`sync.js`](https://github.com/e7andy/garminbadges-updater) from the Chrome extension, calling Garmin's internal `connectapi.garmin.com` endpoints to collect badge and challenge data, then uploading it to `api.garminbadges.com`.
 
+## Publishing
+
+See [PUBLISHING.md](PUBLISHING.md) for a step-by-step guide to signing and releasing to the Google Play Store.
+
 ## Disclaimer
 
 This project is not affiliated with or endorsed by Garmin Ltd. It uses Garmin's internal APIs in the same way as third-party clients and the official Garmin Connect mobile app. Use at your own risk.
