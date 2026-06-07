@@ -34,10 +34,16 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
+      - name: Get version
+        id: version
+        run: |
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
+          name: garminbadges-${{ steps.version.outputs.name }}-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
@@ -63,7 +69,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         uses: actions/upload-artifact@v4
         with:
-          name: release-aab
+          name: garminbadges-${{ steps.version.outputs.name }}-release-aab
           path: app/build/outputs/bundle/release/app-release.aab
           retention-days: 14
 
@@ -88,13 +94,13 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Artifact | Size | Retained |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| 📦 debug-apk | $DEBUG_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 garminbadges-$VERSION_NAME-debug-apk | $DEBUG_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
 
           if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
             AAB_SIZE=$(du -sh app/build/outputs/bundle/release/app-release.aab | cut -f1)
-            echo "| 🚀 release-aab | $AAB_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🚀 garminbadges-$VERSION_NAME-release-aab | $AAB_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
           elif [ -z "$KEYSTORE_BASE64" ]; then
-            echo "| 🔒 release-aab | — | Skipped (no signing secrets configured) |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔒 garminbadges-$VERSION_NAME-release-aab | — | Skipped (no signing secrets configured) |" >> $GITHUB_STEP_SUMMARY
           else
-            echo "| ❌ release-aab | — | Build failed |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ garminbadges-$VERSION_NAME-release-aab | — | Build failed |" >> $GITHUB_STEP_SUMMARY
           fi
