@@ -32,16 +32,17 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
-
       - name: Get version
         id: version
         run: |
           VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
           echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
       - name: Upload debug APK
+        id: upload-debug
         uses: actions/upload-artifact@v4
         with:
           name: garminbadges-${{ steps.version.outputs.name }}-debug-apk
@@ -65,6 +66,7 @@ jobs:
         run: ./gradlew bundleRelease
 
       - name: Upload release AAB
+        id: upload-release
         if: ${{ env.KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -78,10 +80,13 @@ jobs:
         if: always()
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          DEBUG_ARTIFACT_ID: ${{ steps.upload-debug.outputs.artifact-id }}
+          RELEASE_ARTIFACT_ID: ${{ steps.upload-release.outputs.artifact-id }}
         run: |
           VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
           VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | sed 's/[^0-9]//g')
           DEBUG_SIZE=$(du -sh app/build/outputs/apk/debug/app-debug.apk 2>/dev/null | cut -f1 || echo "n/a")
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -95,11 +100,18 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Artifact | Size | Retained |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| 📦 garminbadges-$VERSION_NAME-debug-apk | $DEBUG_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
 
-          if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
+          if [ -n "$DEBUG_ARTIFACT_ID" ]; then
+            DEBUG_URL="$RUN_URL/artifacts/$DEBUG_ARTIFACT_ID"
+            echo "| 📦 [garminbadges-$VERSION_NAME-debug-apk]($DEBUG_URL) | $DEBUG_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 📦 garminbadges-$VERSION_NAME-debug-apk | $DEBUG_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -n "$RELEASE_ARTIFACT_ID" ]; then
             AAB_SIZE=$(du -sh app/build/outputs/bundle/release/app-release.aab | cut -f1)
-            echo "| 🚀 garminbadges-$VERSION_NAME-release-aab | $AAB_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
+            RELEASE_URL="$RUN_URL/artifacts/$RELEASE_ARTIFACT_ID"
+            echo "| 🚀 [garminbadges-$VERSION_NAME-release-aab]($RELEASE_URL) | $AAB_SIZE | 14 days |" >> $GITHUB_STEP_SUMMARY
           elif [ -z "$KEYSTORE_BASE64" ]; then
             echo "| 🔒 garminbadges-$VERSION_NAME-release-aab | — | Skipped (no signing secrets configured) |" >> $GITHUB_STEP_SUMMARY
           else
