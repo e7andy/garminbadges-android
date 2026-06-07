@@ -15,7 +15,7 @@ Release builds must be signed with a private key. Create one with the `keytool` 
 ```bash
 keytool -genkey -v \
   -keystore release.keystore \
-  -alias garminbadges \
+  -alias garminbadges-alias \
   -keyalg RSA \
   -keysize 2048 \
   -validity 10000
@@ -41,7 +41,7 @@ Create a `keystore.properties` file in the project root (next to `gradlew`):
 ```properties
 storeFile=../release.keystore
 storePassword=your_keystore_password
-keyAlias=garminbadges
+keyAlias=garminbadges-alias
 keyPassword=your_key_password
 ```
 
