@@ -23,12 +23,12 @@
             android:src="@drawable/logo"
             android:layout_marginEnd="8dp"
             android:scaleType="fitCenter"
-            android:contentDescription="Garmin Badge Database logo" />
+            android:contentDescription="@string/logo_description" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="G"
+            android:text="@string/brand_initial"
             android:textColor="@color/header_accent"
             android:textSize="26sp"
             android:textStyle="bold"
@@ -37,7 +37,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="armin Badge Database"
+            android:text="@string/brand_name"
             android:textColor="@color/header_text"
             android:textSize="26sp"
             android:textStyle="bold" />
@@ -65,7 +65,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Garmin Connect"
+                    android:text="@string/garmin_connect"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <TextView
@@ -74,14 +74,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:layout_marginBottom="8dp"
-                    android:text="Not signed in" />
+                    android:text="@string/not_signed_in" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSignIn"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign In" />
+                    android:text="@string/sign_in" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -108,14 +108,14 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="API Key"
+                        android:text="@string/api_key"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <TextView
                         android:id="@+id/tvDashboardLink"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Get your key →"
+                        android:text="@string/get_your_key"
                         android:textSize="13sp"
                         android:textColor="?attr/colorPrimary"
                         android:padding="4dp" />
@@ -126,7 +126,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    android:hint="Paste your API key from garminbadges.com">
+                    android:hint="@string/api_key_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etApiKey"
@@ -147,7 +147,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="12dp"
             android:enabled="false"
-            android:text="Sync Now" />
+            android:text="@string/sync_now" />
 
         <ScrollView
             android:id="@+id/scrollLog"

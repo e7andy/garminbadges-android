@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -16,7 +17,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sign in to Garmin Connect"
+            android:text="@string/sign_in_title"
             android:textAppearance="?attr/textAppearanceTitleLarge"
             android:layout_marginBottom="32dp" />
 
@@ -24,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:hint="Email"
+            android:hint="@string/email"
             android:layout_marginBottom="16dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -40,10 +41,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:hint="Password"
+            android:hint="@string/password"
             android:layout_marginBottom="24dp"
-            app:endIconMode="password_toggle"
-            xmlns:app="http://schemas.android.com/apk/res-auto">
+            app:endIconMode="password_toggle">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
@@ -58,7 +58,7 @@
             android:id="@+id/btnSignIn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Sign In" />
+            android:text="@string/sign_in" />
 
     </LinearLayout>
 
@@ -73,21 +73,21 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Two-factor authentication"
+            android:text="@string/mfa_title"
             android:textAppearance="?attr/textAppearanceTitleLarge"
             android:layout_marginBottom="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter the verification code Garmin sent you."
+            android:text="@string/mfa_instructions"
             android:layout_marginBottom="24dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:hint="Verification code"
+            android:hint="@string/verification_code"
             android:layout_marginBottom="24dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -103,7 +103,7 @@
             android:id="@+id/btnSubmitMfa"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Verify" />
+            android:text="@string/verify" />
 
     </LinearLayout>
 

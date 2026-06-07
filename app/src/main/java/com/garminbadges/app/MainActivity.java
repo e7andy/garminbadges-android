@@ -92,11 +92,11 @@ public class MainActivity extends AppCompatActivity {
         refreshToken = prefs.getString(PREF_GARMIN_REFRESH_TOKEN, "");
         String garminEmail = prefs.getString(PREF_GARMIN_EMAIL, "");
         if (!accessToken.isEmpty()) {
-            String label = garminEmail.isEmpty() ? "Signed in to Garmin Connect"
-                                                 : "Signed in as " + garminEmail;
+            String label = garminEmail.isEmpty() ? getString(R.string.signed_in_garmin)
+                                                 : getString(R.string.signed_in_as, garminEmail);
             tvAuthStatus.setText(label);
             btnSync.setEnabled(true);
-            btnSignIn.setText("Sign Out");
+            btnSignIn.setText(R.string.sign_out);
         }
 
         btnSignIn.setOnClickListener(v -> {
@@ -127,13 +127,13 @@ public class MainActivity extends AppCompatActivity {
             .apply();
 
         if (!accessToken.isEmpty()) {
-            String label = email.isEmpty() ? "Signed in to Garmin Connect"
-                                           : "Signed in as " + email;
+            String label = email.isEmpty() ? getString(R.string.signed_in_garmin)
+                                           : getString(R.string.signed_in_as, email);
             tvAuthStatus.setText(label);
-            btnSignIn.setText("Sign Out");
+            btnSignIn.setText(R.string.sign_out);
         } else {
-            tvAuthStatus.setText("Sign-in incomplete — try again.");
-            btnSignIn.setText("Sign In");
+            tvAuthStatus.setText(R.string.sign_in_incomplete);
+            btnSignIn.setText(R.string.sign_in);
         }
         btnSync.setEnabled(!accessToken.isEmpty());
     }
@@ -146,8 +146,8 @@ public class MainActivity extends AppCompatActivity {
             .remove(PREF_GARMIN_REFRESH_TOKEN)
             .remove(PREF_GARMIN_EMAIL)
             .apply();
-        tvAuthStatus.setText("Not signed in");
-        btnSignIn.setText("Sign In");
+        tvAuthStatus.setText(R.string.not_signed_in);
+        btnSignIn.setText(R.string.sign_in);
         btnSync.setEnabled(false);
     }
 

@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">Garmin Badge Database</string>
+
+    <!-- Header -->
+    <string name="brand_initial">G</string>
+    <string name="brand_name">armin Badge Database</string>
+    <string name="logo_description">Garmin Badge Database logo</string>
+
+    <!-- Auth card -->
+    <string name="garmin_connect">Garmin Connect</string>
+    <string name="not_signed_in">Not signed in</string>
+    <string name="signed_in_garmin">Signed in to Garmin Connect</string>
+    <string name="signed_in_as">Signed in as %s</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="sign_in_incomplete">Sign-in incomplete — try again.</string>
+
+    <!-- API key card -->
+    <string name="api_key">API Key</string>
+    <string name="api_key_hint">Paste your API key from garminbadges.com</string>
+    <string name="get_your_key">Get your key →</string>
+
+    <!-- Sync button -->
+    <string name="sync_now">Sync Now</string>
+
+    <!-- AuthActivity — credentials step -->
+    <string name="sign_in_title">Sign in to Garmin Connect</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+
+    <!-- AuthActivity — MFA step -->
+    <string name="mfa_title">Two-factor authentication</string>
+    <string name="mfa_instructions">Enter the verification code Garmin sent you.</string>
+    <string name="verification_code">Verification code</string>
+    <string name="verify">Verify</string>
 </resources>

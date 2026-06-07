@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- logo.png is intentionally supplied once in drawable-nodpi; density variants are not needed -->
+    <issue id="IconMissingDensityFolder" severity="ignore" />
+</lint>
