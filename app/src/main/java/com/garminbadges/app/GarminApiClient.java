@@ -10,16 +10,14 @@ import okhttp3.Response;
 
 public class GarminApiClient {
 
-    private static final String BASE_URL = "https://connect.garmin.com/gc-api";
+    private static final String BASE_URL = "https://connectapi.garmin.com";
 
     private final OkHttpClient httpClient;
-    private final String cookies;
-    private final String csrfToken;
+    private final String accessToken;
 
-    public GarminApiClient(OkHttpClient httpClient, String cookies, String csrfToken) {
+    public GarminApiClient(OkHttpClient httpClient, String accessToken) {
         this.httpClient = httpClient;
-        this.cookies = cookies;
-        this.csrfToken = csrfToken;
+        this.accessToken = accessToken;
     }
 
     public String get(String path, Map<String, String> params) throws IOException {
@@ -32,11 +30,8 @@ public class GarminApiClient {
 
         Request request = new Request.Builder()
             .url(urlBuilder.build())
+            .header("Authorization", "Bearer " + accessToken)
             .header("Accept", "application/json")
-            .header("di-backend", "connectapi.garmin.com")
-            .header("nk", "NT")
-            .header("connect-csrf-token", csrfToken)
-            .header("Cookie", cookies)
             .build();
 
         try (Response response = httpClient.newCall(request).execute()) {

@@ -1,29 +1,53 @@
-# garminbadges-android
+# Garmin Badge Database — Android App
 
-Android client for [Garmin Badge Database](https://garminbadges.com/) that syncs your badge and challenge data from Garmin Connect to the site — a native Android equivalent of the [garminbadges-updater](https://github.com/e7andy/garminbadges-updater) Chrome extension.
+A native Android client for [Garmin Badge Database](https://garminbadges.com/) that syncs your earned badges, challenges, and progress from Garmin Connect to the site.
 
-## How to use
+This is the Android equivalent of the [garminbadges-updater](https://github.com/e7andy/garminbadges-updater) Chrome extension — same sync logic, no browser required.
+
+---
+
+## Features
+
+- **Full badge sync** — earned badges, repeatable badge history, in-progress challenges, virtual challenges, and available badges with progress targets
+- **MFA support** — works with both standard and two-factor Garmin accounts
+- **Persistent session** — signs in once and remembers your credentials between launches
+- **Real-time progress log** — see exactly what's happening during each sync
+
+## Requirements
+
+- Android 8.0 or later (API 26+)
+- A [Garmin Badge Database](https://garminbadges.com/) account with an API key
+- A Garmin Connect account
+
+## Setup
 
 1. Install the APK on your device.
-2. Sign in to [garminbadges.com](https://garminbadges.com), go to your **Dashboard**, and copy your **API key**.
-3. Open the app, paste your API key into the field.
-4. Tap **Sign In** — a WebView opens Garmin Connect. Log in normally, then tap **Done — I'm signed in**.
-5. Tap **Sync Now**. Progress is shown in real time.
+2. Sign in to [garminbadges.com](https://garminbadges.com), go to your [Dashboard](https://garminbadges.com/dashboard), and copy your **API key**.
+3. Open the app and paste your API key into the **API Key** field.
+4. Tap **Sign In** and enter your Garmin Connect credentials. If your account uses two-factor authentication you will be prompted for a verification code.
+5. Tap **Sync Now**. Progress is shown in real time and a confirmation appears when the sync is complete.
 
-## What it syncs
+Your API key and Garmin session are saved locally so you only need to set them up once.
 
-- All earned badges (including full repeat history for repeatable badges)
-- Active challenges with current progress
-- In-progress virtual challenges
-- Available badges with progress targets (not yet earned)
+## What gets synced
 
-## Building
+| Data | Description |
+|---|---|
+| Earned badges | All badges you have earned, including full repeat history for repeatable badges |
+| Active challenges | Badge challenges currently in progress with current progress value |
+| Virtual challenges | In-progress virtual distance/activity challenges |
+| Available badges | Badges not yet earned that have a progress target |
 
-Requires Android Studio or the Android SDK with Gradle.
+## Building from source
+
+Requires Android Studio or the Android command-line tools.
 
 ```bash
 # Debug APK
 ./gradlew assembleDebug
+
+# Release APK (requires signing config)
+./gradlew assembleRelease
 
 # Run unit tests
 ./gradlew test
@@ -34,9 +58,26 @@ Requires Android Studio or the Android SDK with Gradle.
 
 The debug APK is output to `app/build/outputs/apk/debug/app-debug.apk`.
 
+**Minimum requirements:** JDK 11, Android SDK with API 36 build tools.
+
 ## Tech stack
 
-- **minSdk 26** (Android 8.0), **targetSdk 36**, Java 11
-- **WebView** for Garmin Connect authentication
-- **OkHttp 4** for all API calls
-- Material3 UI
+| Component | Technology |
+|---|---|
+| Language | Java 11 |
+| Min SDK | 26 (Android 8.0) |
+| Target SDK | 36 |
+| HTTP client | OkHttp 4.12.0 |
+| JSON | org.json (Android built-in) |
+| UI | Material3 |
+| Auth | Garmin SSO OAuth2 via `diauth.garmin.com` |
+
+## How it works
+
+Authentication uses Garmin's SSO widget flow (`sso.garmin.com`) to obtain an OAuth2 Bearer token from `diauth.garmin.com` — the same approach used by Garmin's own mobile apps. No WebView or browser session is required.
+
+The sync logic is a Java port of [`sync.js`](https://github.com/e7andy/garminbadges-updater) from the Chrome extension, calling Garmin's internal `connectapi.garmin.com` endpoints to collect badge and challenge data, then uploading it to `api.garminbadges.com`.
+
+## Disclaimer
+
+This project is not affiliated with or endorsed by Garmin Ltd. It uses Garmin's internal APIs in the same way as third-party clients and the official Garmin Connect mobile app. Use at your own risk.

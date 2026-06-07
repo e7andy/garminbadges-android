@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project goal
 
-Android client for [Garmin Badge Database](https://garminbadges.com/) that replicates the Chrome extension (`garminbadges-updater`) in a native Android app. The core flow: authenticate with Garmin Connect via WebView → capture session cookies → use OkHttp to call Garmin's internal API endpoints → upload badge/challenge data to `api.garminbadges.com` using the user's API key.
+Native Android app for [Garmin Badge Database](https://garminbadges.com/) that replicates the Chrome extension (`garminbadges-updater`) as a mobile client. Core flow: authenticate with Garmin SSO → exchange service ticket for OAuth2 tokens via `diauth.garmin.com` → call Garmin's internal API → upload badge/challenge data to `api.garminbadges.com` using the user's API key.
 
 ## Build commands
 
@@ -28,8 +28,7 @@ Android client for [Garmin Badge Database](https://garminbadges.com/) that repli
 ## Tech stack
 
 - **minSdk 26**, **targetSdk 36**, Java 11, AGP 9.2.1
-- **WebView** for Garmin Connect authentication (captures session cookies)
-- **OkHttp 4.12.0** for all Garmin and garminbadges.com API calls
+- **OkHttp 4.12.0** for all network calls (Garmin SSO, OAuth token exchange, Garmin API, garminbadges.com API)
 - **org.json** (Android built-in) for JSON parsing — no extra dependency
 - Material3 (`Theme.Material3.DayNight.NoActionBar`)
 - Single-module app under `:app`
@@ -42,28 +41,37 @@ The sync flow is a Java port of `sync.js` from the sibling `garminbadges-updater
 
 | Class | Responsibility |
 |---|---|
-| `AuthActivity` | WebView that loads `connect.garmin.com`; injects JS to extract the CSRF token from `<meta name="_token">`; returns token via `Intent` extra on "Done" |
-| `GarminApiClient` | OkHttp wrapper for all `https://connect.garmin.com/gc-api` calls; attaches the four required headers on every request |
+| `GarminAuthClient` | Programmatic SSO login via `sso.garmin.com` embed widget; handles MFA; exchanges the service ticket for OAuth2 tokens at `diauth.garmin.com` |
+| `AuthActivity` | Native two-step login UI (email/password → optional MFA code); delegates all network work to `GarminAuthClient`; returns `accessToken` + `refreshToken` via `Intent` extras |
+| `GarminApiClient` | OkHttp wrapper for `https://connectapi.garmin.com` calls; attaches `Authorization: Bearer <accessToken>` on every request |
 | `GarminBadgesApiClient` | OkHttp wrapper for `https://api.garminbadges.com/api`; handles `/badges` (GET) and `/sync` (POST) |
 | `SyncManager` | Orchestrates the full sync; runs on a caller-supplied background thread; uses an internal 8-thread pool for parallel badge-detail and repeatable-earn fetches; reports progress via `Callback` |
-| `MainActivity` | UI: API key field (persisted in `SharedPreferences`), Sign In button, Sync Now button, scrolling progress log; runs sync on a single-thread `ExecutorService`, posts UI updates via `Handler(Looper.getMainLooper())` |
+| `MainActivity` | UI: API key field, Sign In/Sign Out button, Sync Now button, scrolling progress log; persists state in `SharedPreferences`; posts UI updates via `Handler(Looper.getMainLooper())` |
 
 ### Auth flow
 
+Authentication uses Garmin's SSO embed widget flow — the same approach used by third-party Python libraries such as [garth-ng](https://github.com/cyberfossa/garth-ng).
+
 1. `MainActivity` launches `AuthActivity` via `ActivityResultLauncher`.
-2. `AuthActivity` enables JavaScript and third-party cookies on the WebView (required for Garmin's SSO redirect through `sso.garmin.com`).
-3. On each `onPageFinished` for a `connect.garmin.com` URL, JS is injected to call `window.GarminBadges.onToken(token)` — a `@JavascriptInterface` that stores the token.
-4. User taps "Done"; `AuthActivity` returns the CSRF token in an `Intent` extra.
-5. `MainActivity` reads cookies for `https://connect.garmin.com` from `CookieManager` and enables the Sync button.
+2. `AuthActivity` creates a `GarminAuthClient` and calls `startAuthentication(email, password)`.
+3. `GarminAuthClient` performs three HTTP steps:
+   - `GET https://sso.garmin.com/sso/embed?...` — seeds SSO cookies
+   - `GET https://sso.garmin.com/sso/signin?service=<embedUrl>&...` — retrieves the `_csrf` token
+   - `POST https://sso.garmin.com/sso/signin` with credentials and `_csrf`
+4. If the response contains a service ticket (`ST-...`), authentication proceeds to token exchange.
+5. If MFA is required (response contains `loginEnterMfaCode`), `AuthActivity` shows the MFA code input. The user's code is submitted via `POST https://sso.garmin.com/sso/verifyMFA/loginEnterMfaCode`.
+6. The service ticket is exchanged for OAuth2 tokens at `https://diauth.garmin.com/di-oauth2-service/oauth/token`, trying three Android client IDs in order: `GARMIN_CONNECT_MOBILE_ANDROID_DI_2025Q2`, `GARMIN_CONNECT_MOBILE_ANDROID_DI_2024Q4`, `GARMIN_CONNECT_MOBILE_ANDROID_DI`.
+7. `AuthActivity` returns `accessToken` and `refreshToken` in the result `Intent`.
+8. `MainActivity` persists both tokens in `SharedPreferences` and enables the Sync button.
 
 ### Sync logic
 
 `SyncManager.sync()` mirrors `sync.js` step by step:
 
 1. `GET /userprofile-service/socialProfile` → `garminUsername`
-2. `GET /badge-service/badge/earned` → earned records
-3. `GET /badgechallenge-service/badgeChallenge/non-completed` + `virtualChallenge/inProgress` + `badge/available` → challenges/available
-4. `GET https://api.garminbadges.com/api/badges` → site catalogue (used for name deduplication and identifying repeatable badges)
+2. `GET /badge-service/badge/earned` → all earned badge records
+3. `GET /badgechallenge-service/badgeChallenge/non-completed` + `virtualChallenge/inProgress` + `badge/available` → challenges and available badges
+4. `GET https://api.garminbadges.com/api/badges` → site catalogue (name deduplication, repeatable badge identification)
 5. Parallel fetch of `badge/detail/v3/{id}` for challenges and earned repeatables
 6. Parallel fetch of `badge/{username}/earned/detail/repeatable/v2/{id}` for all earned repeatables — provides accurate historical earn dates
 7. Deduplication of numbered badge series (e.g. "Badge Name 1", "Badge Name 2" → keep lowest-numbered active one)
@@ -71,28 +79,42 @@ The sync flow is a Java port of `sync.js` from the sibling `garminbadges-updater
 
 ## Garmin API details
 
-All Garmin calls go to `https://connect.garmin.com/gc-api<path>` with these headers:
+All Garmin API calls go directly to `https://connectapi.garmin.com<path>` with:
 
 ```
+Authorization: Bearer <accessToken>
 Accept: application/json
-di-backend: connectapi.garmin.com
-nk: NT
-connect-csrf-token: <token from <meta name="_token"> on the page>
-Cookie: <session cookies from CookieManager>
 ```
 
-Key endpoints:
-- `GET /userprofile-service/socialProfile` — resolve `userName`
-- `GET /badge-service/badge/earned` — all earned badges; use `badgeEarnedNumber` (not `earnedNumber`) for repeat count
-- `GET /badgechallenge-service/badgeChallenge/non-completed?desc=true&start=1&includeExclusive=true&limit=10000`
-- `GET /badgechallenge-service/virtualChallenge/inProgress`
-- `GET /badge-service/badge/available` — badges with `badgeTargetValue != null` and `badgeCategoryId !== 4`
-- `GET /badge-service/badge/detail/v3/{id}` — in-progress detail for a badge
-- `GET /badge-service/badge/{username}/earned/detail/repeatable/v2/{id}?start=1&limit=1000` — full earn history
+> **Note:** The `connect.garmin.com/gc-api` proxy (with `di-backend`/`nk`/CSRF headers) is the web-app approach and does **not** work with OAuth Bearer tokens.
 
-Upload endpoint: `POST https://api.garminbadges.com/api/sync` with `Authorization: Bearer <apiKey>` and body `{ user_badges: [...], garmin_username: "..." }`.
+### Key endpoints
 
-Record schema for each badge entry:
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/userprofile-service/socialProfile` | Resolves `userName` |
+| GET | `/badge-service/badge/earned` | All earned badges; use `badgeEarnedNumber` (not `earnedNumber`) for repeat count |
+| GET | `/badgechallenge-service/badgeChallenge/non-completed?desc=true&start=1&includeExclusive=true&limit=10000` | Active challenges |
+| GET | `/badgechallenge-service/virtualChallenge/inProgress` | In-progress virtual challenges |
+| GET | `/badge-service/badge/available` | Badges where `badgeTargetValue != null` and `badgeCategoryId !== 4` |
+| GET | `/badge-service/badge/detail/v3/{id}` | In-progress detail for a single badge |
+| GET | `/badge-service/badge/{username}/earned/detail/repeatable/v2/{id}?start=1&limit=1000` | Full earn history for a repeatable badge |
+
+### Upload endpoint
+
+`POST https://api.garminbadges.com/api/sync`
+
+Headers: `Authorization: Bearer <apiKey>`
+
+Body:
+```json
+{
+  "user_badges": [ ... ],
+  "garmin_username": "username"
+}
+```
+
+Record schema:
 ```json
 {
   "badge_id": 123,
@@ -104,3 +126,14 @@ Record schema for each badge entry:
   "create_date": "2024-01-01"
 }
 ```
+
+## SharedPreferences keys
+
+All stored under `"app_prefs"`:
+
+| Key | Value |
+|---|---|
+| `api_key` | User's garminbadges.com API key |
+| `garmin_email` | Last used Garmin email (pre-fills the sign-in form) |
+| `garmin_access_token` | OAuth2 access token |
+| `garmin_refresh_token` | OAuth2 refresh token |

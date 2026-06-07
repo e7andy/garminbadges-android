@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="40"
+    android:viewportHeight="40">
+
+    <!-- Dark blue rounded square background -->
+    <path
+        android:fillColor="#1B3461"
+        android:pathData="M6,0 L34,0 Q40,0 40,6 L40,34 Q40,40 34,40 L6,40 Q0,40 0,34 L0,6 Q0,0 6,0 Z" />
+
+    <!-- White palm base (wide rounded rect) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M13,24 Q13,21 16,21 L24,21 Q27,21 27,24 L27,31 Q27,34 24,34 L16,34 Q13,34 13,31 Z" />
+
+    <!-- White index finger (tall rounded rect, center) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M17,10 Q17,8 20,8 Q23,8 23,10 L23,23 L17,23 Z" />
+
+    <!-- Blue accent circle at fingertip -->
+    <path
+        android:fillColor="#4A90D9"
+        android:pathData="M20,13 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+
+</vector>

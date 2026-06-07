@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="header_bg">#111111</color>
+    <color name="header_text">#FFFFFF</color>
+    <color name="header_accent">#CC0000</color>
+    <color name="logo_bg">#1B3461</color>
+    <color name="snackbar_success">#2E7D32</color>
 </resources>
