@@ -180,7 +180,7 @@ Navigate to **Store presence → Main store listing** and fill in:
 |---|---|
 | Short description | Sync your Garmin badges and challenges to Garmin Badge Database |
 | Full description | See below |
-| App icon | 512×512 PNG (use the logo from `app/src/main/res/drawable/logo.png` on a solid background) |
+| App icon | 512×512 PNG (use the logo from `app/src/main/res/drawable-nodpi/logo.png` on a solid background) |
 | Feature graphic | 1024×500 PNG |
 | Screenshots | At least 2 phone screenshots (required) |
 
