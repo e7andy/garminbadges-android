@@ -207,7 +207,7 @@ Play Console will show a checklist of required items before you can publish. Wor
 - **Privacy policy:** Required. Host a simple privacy policy page and link to it. At minimum it should state what data the app collects (Garmin credentials entered by the user, stored locally on-device) and that no data is shared with third parties beyond garminbadges.com.
 - **Ads:** No
 - **Content rating:** Complete the questionnaire. This app will likely receive an **Everyone** rating.
-- **Target audience:** 18+ (the app requires a Garmin account)
+- **Target audience:** 13+ (Garmin Connect's minimum age requirement)
 - **Data safety:** Declare what data is collected and how it is used. This app stores credentials locally on-device and sends badge data to garminbadges.com.
 
 **Data safety** (`Policy → Data safety`) — suggested declarations:
