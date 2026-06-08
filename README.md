@@ -46,8 +46,8 @@ Requires Android Studio or the Android command-line tools.
 # Debug APK
 ./gradlew assembleDebug
 
-# Release APK (requires signing config)
-./gradlew assembleRelease
+# Release AAB for Play Store (requires signing config — see PUBLISHING.md)
+./gradlew bundleRelease
 
 # Run unit tests
 ./gradlew test
