@@ -26,6 +26,7 @@ public class SyncManager {
         void onProgress(String message);
         void onComplete(int recordCount, JSONObject response);
         void onError(String message);
+        void onAuthExpired();
     }
 
     private final GarminApiClient garmin;
@@ -361,7 +362,9 @@ public class SyncManager {
 
         } catch (IOException e) {
             String msg = e.getMessage();
-            if ("INVALID_API_KEY".equals(msg)) {
+            if ("GARMIN_AUTH_EXPIRED".equals(msg)) {
+                callback.onAuthExpired();
+            } else if ("INVALID_API_KEY".equals(msg)) {
                 callback.onError("Invalid API key. Check your key from the dashboard.");
             } else if ("VALIDATION_ERROR".equals(msg)) {
                 callback.onError("Validation error — check your API key and try again.");

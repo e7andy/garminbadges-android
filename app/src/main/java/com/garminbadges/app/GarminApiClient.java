@@ -35,6 +35,9 @@ public class GarminApiClient {
             .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
+            if (response.code() == 401 || response.code() == 403) {
+                throw new IOException("GARMIN_AUTH_EXPIRED");
+            }
             if (!response.isSuccessful()) {
                 throw new IOException("Garmin API error: " + response.code() + " on " + path);
             }

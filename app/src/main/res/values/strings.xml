@@ -14,6 +14,7 @@
     <string name="sign_in">Sign In</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in_incomplete">Sign-in incomplete — try again.</string>
+    <string name="auth_expired">Your Garmin session expired — please sign in again.</string>
 
     <!-- API key card -->
     <string name="api_key">API Key</string>

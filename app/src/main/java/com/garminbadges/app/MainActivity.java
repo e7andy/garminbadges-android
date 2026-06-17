@@ -151,6 +151,26 @@ public class MainActivity extends AppCompatActivity {
         btnSync.setEnabled(false);
     }
 
+    private void handleAuthExpired() {
+        accessToken = "";
+        refreshToken = "";
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+            .remove(PREF_GARMIN_ACCESS_TOKEN)
+            .remove(PREF_GARMIN_REFRESH_TOKEN)
+            .apply();
+        tvAuthStatus.setText(R.string.not_signed_in);
+        btnSignIn.setText(R.string.sign_in);
+        btnSync.setEnabled(false);
+
+        appendLog(getString(R.string.auth_expired));
+        com.google.android.material.snackbar.Snackbar
+            .make(findViewById(R.id.main), R.string.auth_expired,
+                com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+            .show();
+
+        authLauncher.launch(new Intent(this, AuthActivity.class));
+    }
+
     private void startSync() {
         String apiKey = etApiKey.getText().toString().trim();
         if (apiKey.isEmpty()) {
@@ -201,6 +221,11 @@ public class MainActivity extends AppCompatActivity {
                             com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
                         .show();
                 });
+            }
+
+            @Override
+            public void onAuthExpired() {
+                mainHandler.post(() -> handleAuthExpired());
             }
         }));
     }
