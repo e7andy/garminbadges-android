@@ -161,12 +161,9 @@ public class MainActivity extends AppCompatActivity {
         tvAuthStatus.setText(R.string.not_signed_in);
         btnSignIn.setText(R.string.sign_in);
         btnSync.setEnabled(false);
+        tvLog.setText("");
 
-        appendLog(getString(R.string.auth_expired));
-        com.google.android.material.snackbar.Snackbar
-            .make(findViewById(R.id.main), R.string.auth_expired,
-                com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-            .show();
+        android.widget.Toast.makeText(this, R.string.auth_expired, android.widget.Toast.LENGTH_LONG).show();
 
         authLauncher.launch(new Intent(this, AuthActivity.class));
     }
